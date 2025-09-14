@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Wazuh - Ubuntu 20.04</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #7ee787;
+            --accent: #1f6feb;
+            --border: #30363d;
+            --code-bg: #0d1117;
+            --success: #3fb950;
+            --warning: #d29922;
+            --error: #f85149;
+            --table-header: #161b22;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--text-secondary);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            background-color: var(--code-bg);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border: 1px solid var(--border);
+        }
+        
+        pre {
+            background-color: var(--code-bg);
+            padding: 1.2rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            font-size: 0.9em;
+        }
+        
+        .command {
+            position: relative;
+            margin: 1.5rem 0;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        .copy-btn:hover {
+            opacity: 1;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            list-style: none;
+            margin: 2rem 0;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        
+        .nav-tabs li {
+            margin-right: 0.2rem;
+        }
+        
+        .nav-tabs a {
+            display: block;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .nav-tabs a:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-tabs a.active {
+            background-color: var(--bg-secondary);
+            border-color: var(--border);
+            color: var(--text-secondary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .resources-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+        
+        .resources-table th {
+            background-color: var(--table-header);
+            color: var(--text-secondary);
+            padding: 1rem;
+            text-align: left;
+            border: 1px solid var(--border);
+            font-weight: 600;
+        }
+        
+        .resources-table td {
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+        }
+        
+        .resources-table tr {
+            transition: background-color 0.2s;
+        }
+        
+        .resources-table tr:hover {
+            background-color: rgba(31, 111, 235, 0.05);
+        }
+        
+        .expert-note {
+            background: linear-gradient(to right, rgba(31, 111, 235, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .expert-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .expert-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #005cc5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .contact-item a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .contact-item a:hover {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+        
+        .contact-icon {
+            color: var(--accent);
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .recommendations {
+            background-color: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border: 1px solid var(--border);
+        }
+        
+        .recommendations ul {
+            padding-left: 1.5rem;
+        }
+        
+        .recommendations li {
+            margin-bottom: 0.8rem;
+            line-height: 1.6;
+        }
+        
+        .step {
+            background-color: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--accent);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin-right: 0.8rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .note {
+            background: linear-gradient(to right, rgba(63, 185, 80, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--success);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .warning {
+            background: linear-gradient(to right, rgba(210, 153, 34, 0.1) 0%, transparent 100%);
+            border-left: 4px solid var(--warning);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        /* Botón de regreso a index */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        
+        .back-button:hover {
+            background: #0c5bc0;
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                border-bottom: none;
+            }
+            
+            .nav-tabs li {
+                margin-bottom: 0.2rem;
+                margin-right: 0;
+            }
+            
+            .nav-tabs a {
+                border-radius: 6px;
+                border: 1px solid var(--border);
+                margin-bottom: 0.5rem;
+            }
+            
+            .nav-tabs a.active {
+                border-bottom: 1px solid var(--border);
+            }
+            
+            pre {
+                padding: 1rem;
+                font-size: 0.85em;
+            }
+            
+            .expert-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .expert-avatar {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+
+            /* Ajuste para móviles */
+            .back-button {
+                width: 40px;
+                height: 40px;
+                top: 10px;
+                left: 10px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón de regreso a index.html -->
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+
+    <header>
+        <div class="container">
+            <h1>Guía de Instalación de Wazuh</h1>
+            <p>Procedimiento completo para implementar Wazuh en Ubuntu 20.04</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <ul class="nav-tabs">
+            <li><a href="#resources" class="tab-link active">Recursos</a></li>
+            <li><a href="#verification" class="tab-link">Verificación</a></li>
+            <li><a href="#installation" class="tab-link">Instalación</a></li>
+            <li><a href="#windows-agent" class="tab-link">Agente Windows</a></li>
+        </ul>
+
+        <div id="resources" class="tab-content active">
+            <h2>Requisitos del Sistema</h2>
+            
+            <div class="expert-note">
+                <div class="expert-header">
+                    <div class="expert-avatar">CV</div>
+                    <div>
+                        <h3 style="margin: 0;">CHRISTIAN VERGARAY - ANALISTA SOC</h3>
+                    </div>
+                </div>
+                <p>La correcta dimensionación de recursos es fundamental para el rendimiento de Wazuh. Estos valores representan los mínimos requeridos para un funcionamiento estable en entornos productivos.</p>
+            </div>
+
+            <h3>Requerimientos de Hardware según Cantidad de Agentes</h3>
+            
+            <table class="resources-table">
+                <thead>
+                    <tr>
+                        <th>Agentes</th>
+                        <th>CPU</th>
+                        <th>RAM</th>
+                        <th>Almacenamiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1-25</td>
+                        <td>4 vCPU</td>
+                        <td>8 GiB</td>
+                        <td>50 GB</td>
+                    </tr>
+                    <tr>
+                        <td>25-50</td>
+                        <td>8 vCPU</td>
+                        <td>8 GiB</td>
+                        <td>100 GB</td>
+                    </tr>
+                    <tr>
+                        <td>50-100</td>
+                        <td>8 vCPU</td>
+                        <td>8 GiB</td>
+                        <td>200 GB</td>
+                    </tr>
+                    <tr>
+                        <td>100-250</td>
+                        <td>16 vCPU</td>
+                        <td>16 GiB</td>
+                        <td>500 GB</td>
+                    </tr>
+                    <tr>
+                        <td>250-500</td>
+                        <td>24 vCPU</td>
+                        <td>32 GiB</td>
+                        <td>1 TB</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="recommendations">
+                <h3>Consideraciones Adicionales</h3>
+                <ul>
+                    <li>Los requisitos de CPU aumentan con el módulo de detección de malware o análisis de vulnerabilidades.</li>
+                    <li>Para entornos con alta generación de eventos, aumentar la RAM en un 30-50%.</li>
+                    <li>El almacenamiento recomendado es para 90 días de retención de datos.</li>
+                    <li>Para implementaciones en la nube, utilizar instancias optimizadas para computación.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="verification" class="tab-content">
+            <h2>Verificación de Wazuh</h2>
+            
+            <div class="step">
+                <h3><span class="step-number">1</span>Comprobar instalación existente</h3>
+                <p>Verificar si Wazuh está presente en el sistema:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>dpkg -l | grep -i wazuh</code></pre>
+                </div>
+                <p>Si no hay resultados, Wazuh no está instalado. Si hay paquetes relacionados, proceder con la desinstalación.</p>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">2</span>Verificar distribución</h3>
+                <p>Confirmar que está utilizando Ubuntu 20.04:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>cat /etc/os-release</code></pre>
+                </div>
+            </div>
+
+            <div class="warning">
+                <strong>Desinstalación Completa:</strong> Si necesita eliminar Wazuh, utilice los siguientes comandos:
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo apt purge wazuh-agent -y
+sudo rm -rf /var/ossec /etc/wazuh*</code></pre>
+                </div>
+                
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo dpkg --remove --force-remove-reinstreq wazuh-agent
+sudo apt --fix-broken install -y</code></pre>
+                </div>
+                
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo dpkg --remove --force-all wazuh-agent
+sudo dpkg --purge --force-all wazuh-agent</code></pre>
+                </div>
+                
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo rm -f /var/lib/dpkg/info/wazuh-agent.*
+sudo dpkg --remove --force-remove-reinstreq wazuh-agent
+sudo apt purge wazuh-agent -y</code></pre>
+                </div>
+                
+                <p>Validar que Wazuh se ha eliminado completamente:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>dpkg -l | grep -i wazuh</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="installation" class="tab-content">
+            <h2>Instalación de Wazuh</h2>
+            
+            <div class="step">
+                <h3><span class="step-number">1</span>Descargar script de instalación</h3>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>cd ~
+curl -sO https://packages.wazuh.com/4.10/wazuh-install.sh
+chmod +x wazuh-install.sh
+ls -l wazuh-install.sh</code></pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">2</span>Instalación completa</h3>
+                <p>Ejecutar el script de instalación automática:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo ./wazuh-install.sh -a</code></pre>
+                </div>
+                <div class="note">
+                    <strong>Nota:</strong> Para sobreescribir una instalación existente:
+                    <div class="command">
+                        <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                        <pre><code>sudo ./wazuh-install.sh -a --overwrite</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">3</span>Gestionar agentes</h3>
+                <p>Agregar nuevos agentes al servidor Wazuh:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo /var/ossec/bin/manage_agents</code></pre>
+                </div>
+                <p>Seleccione 'A' para añadir un nuevo agente, proporcione un nombre y la IP del host.</p>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">4</span>Extraer clave del agente</h3>
+                <p>Ejecute nuevamente manage_agents and seleccione 'E' para extraer la clave del agente:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo /var/ossec/bin/manage_agents</code></pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">5</span>Verificar agentes conectados</h3>
+                <p>Comprobar agentes conectados al servidor:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>sudo /var/ossec/bin/agent_control -lc</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="windows-agent" class="tab-content">
+            <h2>Configuración de Agente Windows</h2>
+            
+            <div class="step">
+                <h3><span class="step-number">1</span>Descargar agente Windows</h3>
+                <p>Instalador de agente Windows:</p>
+                <p><a href="https://packages.wazuh.com/4.x/windows/wazuh-agent-4.10.3-1.msi" style="color: var(--text-secondary);">https://packages.wazuh.com/4.x/windows/wazuh-agent-4.10.3-1.msi</a></p>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">2</span>Verificar instalación</h3>
+                <p>En PowerShell, verificar la instalación:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>Get-Service *wazuh* -ErrorAction SilentlyContinue | Format-Table -AutoSize</code></pre>
+                </div>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>Test-Path "C:\Program Files (x86)\ossec-agent\agent-auth.exe"</code></pre>
+                </div>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>Test-Path "C:\Program Files\ossec-agent\agent-auth.exe"</code></pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">3</span>Registrar agente</h3>
+                <p>Registrar el agente con el servidor Wazuh (reemplazar IP_SERVIDOR y CLAVE_AGENTE):</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>& "C:\Program Files (x86)\ossec-agent\agent-auth.exe" -m 192.168.18.41 -k MDAxIExBUFRPUERFTEwgMTkyLjE2OC4xOC4xMTAgNmMyNWVjODdhN2ExZmJkMGNmNGI0YjY4NDg4NDU0NDlhNDUyMzU1NWI3ZDFlNGQ0ZDc5MGNkMGNiNTNmMTAzMg==</code></pre>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3><span class="step-number">4</span>Iniciar servicio</h3>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>Start-Service WazuhSvc</code></pre>
+                </div>
+                
+                <p>Verificar estado del servicio:</p>
+                <div class="command">
+                    <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                    <pre><code>Get-Service WazuhSvc</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para copiar código al portapapeles
+        function copyCode(button) {
+            const codeElement = button.parentElement.querySelector('code');
+            const textArea = document.createElement('textarea');
+            textArea.value = codeElement.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Feedback visual
+            const originalText = button.textContent;
+            button.textContent = '✓ Copiado';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        }
+        
+        // Navegación por pestañas
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabLinks = document.querySelectorAll('.tab-link');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabLinks.forEach(function(tab) {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Obtener el objetivo de la pestaña
+                    const target = this.getAttribute('href');
+                    
+                    // Desactivar todas las pestañas y contenidos
+                    tabLinks.forEach(function(link) {
+                        link.classList.remove('active');
+                    });
+                    
+                    tabContents.forEach(function(content) {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Activar la pestaña y contenido seleccionados
+                    this.classList.add('active');
+                    document.querySelector(target).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
